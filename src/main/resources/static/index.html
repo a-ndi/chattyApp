@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chatty - Test UI</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 30px;
+        max-width: 800px;
+        margin: auto;
+    }
+
+    input, button {
+        padding: 10px;
+        margin: 5px;
+        font-size: 16px;
+    }
+
+    #messages {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background: #fafafa;
+        height: 300px;
+        overflow-y: auto;
+    }
+
+    .message {
+        padding: 8px;
+        margin-bottom: 6px;
+        background: #e9e9e9;
+        border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Send Message</h2>
+
+<input id="sender" type="number" placeholder="Sender ID">
+<input id="receiver" type="number" placeholder="Receiver ID">
+<input id="content" type="text" placeholder="Type a message..." style="width: 300px;">
+<button onclick="sendMessage()">Send</button>
+
+<h2>Chat History</h2>
+
+<input id="user1" type="number" placeholder="User 1 ID">
+<input id="user2" type="number" placeholder="User 2 ID">
+<button onclick="loadChatHistory()">Load Chat History</button>
+
+<div id="messages"></div>
+
+<script>
+  async function sendMessage() {
+      const senderId = document.getElementById("sender").value;
+      const receiverId = document.getElementById("receiver").value;
+      const content = document.getElementById("content").value;
+
+      if (!senderId || !receiverId || !content) {
+          alert("Fill all fields before sending.");
+          return;
+      }
+
+      const url = `http://localhost:8081/messages/send?senderId=${senderId}&receiverId=${receiverId}&content=${encodeURIComponent(content)}`;
+
+      try {
+          const res = await fetch(url, { method: "POST" });
+          const msg = await res.json();
+
+          document.getElementById("messages").innerHTML +=
+              `<div class='message'><b>${msg.sender.username}:</b> ${msg.content}</div>`;
+      } catch (e) {
+          alert("Error sending message. Check backend logs.");
+      }
+  }
+
+  async function loadChatHistory() {
+      const u1 = document.getElementById("user1").value;
+      const u2 = document.getElementById("user2").value;
+
+      if (!u1 || !u2) {
+          alert("Enter both user IDs.");
+          return;
+      }
+
+      const url = `http://localhost:8081/messages/history?userId1=${u1}&userId2=${u2}`;
+
+      try {
+          const res = await fetch(url);
+          const messages = await res.json();
+
+          const box = document.getElementById("messages");
+          box.innerHTML = "";
+
+          messages.forEach(m => {
+              box.innerHTML += `<div class='message'><b>${m.sender.username}:</b> ${m.content}
+                                <small>(${m.timestamp})</small></div>`;
+          });
+
+      } catch (e) {
+          alert("Error loading history.");
+      }
+  }
+</script>
+
+</body>
+</html>
